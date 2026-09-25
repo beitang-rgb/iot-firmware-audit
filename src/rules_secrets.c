@@ -103,7 +103,10 @@ static int walk_secrets(AuditReport *rep, const char *dir, const char *rel_base)
         snprintf(rel, sizeof(rel), "%s/%s", rel_base, ent->d_name);
 
         struct stat st;
-        if (stat(full, &st) != 0) continue;
+        /* 用 lstat 不跟随符号链接：防止恶意固件里的软链
+         * (如 /etc/evil -> /etc/shadow) 把扫描引到宿主机真实文件。 */
+        if (lstat(full, &st) != 0) continue;
+        if (S_ISLNK(st.st_mode)) continue;   /* 符号链接一律不进 */
 
         if (S_ISDIR(st.st_mode)) {
             n += walk_secrets(rep, full, rel);

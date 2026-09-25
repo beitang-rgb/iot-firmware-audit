@@ -98,6 +98,7 @@ int shadow_line_weak(const char *line, Finding *out)
 
 /*
  * 纯函数：判断 passwd 一行是否把哈希放在了第二字段。
+ * 同样用 split_colon_fields 保留空字段，避免 strtok 合并连续冒号。
  */
 int passwd_line_stores_hash(const char *line, Finding *out)
 {
@@ -105,12 +106,13 @@ int passwd_line_stores_hash(const char *line, Finding *out)
     snprintf(buf, sizeof(buf), "%s", line);
     if (buf[0] == '#' || buf[0] == '\0') return 0;
 
-    char *save = NULL;
-    char *user = strtok_r(buf, ":", &save);
-    char *field = strtok_r(NULL, ":", &save);
-    if (!user || !field) return 0;
+    char *fields[16];
+    int nf = split_colon_fields(buf, fields, 16);
+    if (nf < 2) return 0;
+    char *user = fields[0];
+    char *field = fields[1];
 
-    /* 'x' 表示真正哈希在 shadow 中；'*'/'!' 表示禁止登录 —— 都正常 */
+    /* 'x' 表示真正哈希在 shadow 中；'*'/'!' 表示禁止登录；空字段也正常 */
     if (strcmp(field, "x") == 0 || field[0] == '*' || field[0] == '!' ||
         field[0] == '\0') {
         return 0;
