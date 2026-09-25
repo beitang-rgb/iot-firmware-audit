@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -g -Wno-format-truncation)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# 规则模块（新增规则在这里登记，scanner.c 里也调用一下即可）
+# 规则模块（新增规则在 registry.c 的 RULES[] 表里登记，并把 .c 加到这里）
 set(RULES_SOURCES
     src/rules_account.c
     src/rules_secrets.c
@@ -24,6 +24,7 @@ add_executable(ifa
     src/report.c
     src/report_html.c
     ${RULES_SOURCES}
+    src/registry.c
     src/extract.c
     src/scanner.c
     src/cli.c

@@ -3,11 +3,12 @@
  */
 #include "scanner.h"
 #include "extract.h"
+#include "registry.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#define IFA_VERSION "0.3.0"
+/* IFA_VERSION 定义在 include/audit.h，与 JSON 报告共用，只改一处 */
 
 static void usage(const char *prog)
 {
@@ -35,6 +36,9 @@ int main(int argc, char **argv)
             return 0;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("ifa v%s\n", IFA_VERSION);
+            return 0;
+        } else if (strcmp(argv[i], "--list-rules") == 0) {
+            registry_list();
             return 0;
         } else if (strcmp(argv[i], "--json") == 0) {
             opts.format = "json";

@@ -148,6 +148,7 @@ static int scan_lines(const char *path, const char *rel_path,
         }
     }
     fclose(fp);
+    rep->files_scanned++;
     return n;
 }
 

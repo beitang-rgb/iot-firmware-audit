@@ -56,7 +56,7 @@ static void render_json(const AuditReport *rep, FILE *out)
 {
     fprintf(out, "{\n");
     fprintf(out, "  \"tool\": \"iot-firmware-audit\",\n");
-    fprintf(out, "  \"version\": \"0.1.0\",\n");
+    fprintf(out, "  \"version\": \"%s\",\n", IFA_VERSION);
     fprintf(out, "  \"root_dir\": \"");
     json_esc(rep->root_dir, out);
     fprintf(out, "\",\n");
