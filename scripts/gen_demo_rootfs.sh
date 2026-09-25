@@ -5,7 +5,7 @@ set -euo pipefail
 
 ROOT="${1:-examples/demo_rootfs}"
 rm -rf "$ROOT"
-mkdir -p "$ROOT/etc/init.d" "$ROOT/etc/ssh"
+mkdir -p "$ROOT/etc/init.d" "$ROOT/etc/ssh" "$ROOT/www/cgi-bin"
 
 # /etc/passwd: admin 把口令哈希直接放在第二字段(应为 x)
 cat > "$ROOT/etc/passwd" <<'EOF'
@@ -38,9 +38,19 @@ PermitRootLogin yes
 PasswordAuthentication yes
 EOF
 
+# /www/config.backup.tar.gz: 配置备份暴露在 web 根(可被直接下载)
+echo "backup" > "$ROOT/www/config.backup.tar.gz"
+
+# /www/cgi-bin/exec.cgi: 故意全局可写(0777)，可被替换成后门
+cat > "$ROOT/www/cgi-bin/exec.cgi" <<'EOF'
+#!/bin/sh
+echo "Content-Type: text/html"
+EOF
+
 # 权限: shadow 应 600，这里故意设为 644(可被普通用户读)
 chmod 0644 "$ROOT/etc/shadow"
 chmod 0644 "$ROOT/etc/ssh/sshd_config"
 chmod 0755 "$ROOT/etc/init.d/S50telnet"
+chmod 0777 "$ROOT/www/cgi-bin/exec.cgi"
 
 echo "demo rootfs generated at: $ROOT"

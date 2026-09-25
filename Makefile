@@ -4,6 +4,7 @@ CFLAGS  ?= -Wall -Wextra -g -Wno-format-truncation -Iinclude
 SRCS    := src/audit.c src/report.c src/report_html.c \
            src/rules_account.c src/rules_secrets.c src/rules_suid.c src/rules_boot.c \
            src/rules_net.c src/rules_worldwritable.c src/rules_ssh.c src/rules_perms.c \
+           src/rules_web.c \
            src/registry.c src/extract.c src/scanner.c src/cli.c
 TEST_SRCS := tests/test_rules.c src/audit.c \
            src/rules_account.c src/rules_secrets.c src/rules_suid.c src/rules_boot.c \

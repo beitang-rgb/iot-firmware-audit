@@ -9,6 +9,7 @@ echo "=== building ifa ==="
 gcc -Wall -Wextra -g -Wno-format-truncation -Iinclude src/audit.c src/report.c src/report_html.c \
     src/rules_account.c src/rules_secrets.c src/rules_suid.c src/rules_boot.c \
     src/rules_net.c src/rules_worldwritable.c src/rules_ssh.c src/rules_perms.c \
+    src/rules_web.c \
     src/registry.c src/extract.c src/scanner.c src/cli.c \
     -o ifa
 
@@ -29,5 +30,9 @@ grep -q 'IFA-SEC-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-SEC-001 mis
 grep -q 'IFA-NET-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-NET-001 missing"; exit 1; }
 # SSH 弱配置
 grep -q 'IFA-SSH-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-SSH-001 missing"; exit 1; }
+# web 配置备份暴露
+grep -q 'IFA-WEB-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-WEB-001 missing"; exit 1; }
+# cgi-bin 全局可写
+grep -q 'IFA-WEB-002' /tmp/ifa_integration.json || { echo "FAIL: IFA-WEB-002 missing"; exit 1; }
 
 echo "ALL INTEGRATION TESTS PASSED"

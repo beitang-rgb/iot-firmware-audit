@@ -10,6 +10,7 @@
 #include "rules_worldwritable.h"
 #include "rules_ssh.h"
 #include "rules_perms.h"
+#include "rules_web.h"
 #include <stdio.h>
 
 /* 以下 wrapper 把"路径拼接"这种和规则无关的样板代码收在这里，
@@ -32,7 +33,7 @@ static int rule_secrets(AuditReport *rep, const char *root)
     return audit_secrets_in_dir(rep, p);
 }
 
-/* suid/boot/net/worldwritable/ssh/perms 本身就是 (rep, root) 签名，直接登记 */
+/* suid/boot/net/worldwritable/ssh/perms/web 本身就是 (rep, root) 签名，直接登记 */
 
 /* 规则表：新增规则就在这里加一行 */
 static const RuleEntry RULES[] = {
@@ -44,6 +45,7 @@ static const RuleEntry RULES[] = {
     { "worldwritable", audit_worldwritable },
     { "ssh",           audit_ssh_config },
     { "perms",         audit_sensitive_perms },
+    { "web",           audit_web_exposures },
 };
 #define N_RULES (int)(sizeof(RULES) / sizeof(RULES[0]))
 

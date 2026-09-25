@@ -16,6 +16,7 @@ set(RULES_SOURCES
     src/rules_worldwritable.c
     src/rules_ssh.c
     src/rules_perms.c
+    src/rules_web.c
 )
 
 # 主程序
