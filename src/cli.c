@@ -19,6 +19,8 @@ static void usage(const char *prog)
     printf("  --json FILE    Write JSON report to FILE\n");
     printf("  --html FILE    Write standalone HTML report to FILE\n");
     printf("  --text         Human-readable report to stdout (default)\n");
+    printf("  --exclude DIR  Exclude findings under relative path DIR (repeatable)\n");
+    printf("  --only SEV     Keep only findings of given severities, e.g. CRITICAL,HIGH\n");
     printf("  -v, --version  Print version and exit\n");
     printf("  -h, --help     Show this help\n");
 }
@@ -29,15 +31,18 @@ int main(int argc, char **argv)
     memset(&opts, 0, sizeof(opts));
     opts.format = "text";
     const char *extract_bin = NULL;
-    char rootfs[1024];   /* 必须在 main 顶部声明，否则块结束后变成悬垂指针 */
+    char rootfs[1024];
     rootfs[0] = '\0';
+    const char *exclude_arr[64];
+    opts.exclude_dirs = exclude_arr;
+    opts.exclude_count = 0;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             usage(argv[0]);
             return 0;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
-            printf("ifa v%s\n", IFA_VERSION);
+            printf("ifa v%s (built %s %s)\n", IFA_VERSION, __DATE__, __TIME__);
             return 0;
         } else if (strcmp(argv[i], "--list-rules") == 0) {
             registry_list();
@@ -63,7 +68,24 @@ int main(int argc, char **argv)
             extract_bin = argv[++i];
         } else if (strcmp(argv[i], "--text") == 0) {
             opts.format = "text";
-            opts.output_file = NULL;   /* --text 强制只写 stdout，不写文件 */
+            opts.output_file = NULL;
+        } else if (strcmp(argv[i], "--exclude") == 0) {
+            if (i + 1 >= argc || argv[i+1][0] == '-') {
+                fprintf(stderr, "error: --exclude 需要一个目录路径\n");
+                return 1;
+            }
+            if (opts.exclude_count < 64) {
+                exclude_arr[opts.exclude_count++] = argv[++i];
+            } else {
+                fprintf(stderr, "error: --exclude 最多 64 个\n");
+                return 1;
+            }
+        } else if (strcmp(argv[i], "--only") == 0) {
+            if (i + 1 >= argc || argv[i+1][0] == '-') {
+                fprintf(stderr, "error: --only 需要一个严重度列表(如 CRITICAL,HIGH)\n");
+                return 1;
+            }
+            opts.only_sev = argv[++i];
         } else if (argv[i][0] == '-') {
             fprintf(stderr, "error: unknown option '%s'\n\n", argv[i]);
             usage(argv[0]);
@@ -73,7 +95,6 @@ int main(int argc, char **argv)
         }
     }
 
-    /* --extract: 先解包，再把解出来的 rootfs 路径作为 root_dir */
     if (extract_bin) {
         printf("=== iot-firmware-audit v%s (extract mode) ===\n", IFA_VERSION);
         printf("firmware: %s\n\n", extract_bin);
