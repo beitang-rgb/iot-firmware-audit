@@ -24,6 +24,7 @@ static const struct Remap TABLE[] = {
     { "IFA-WEB-001", "从 web 根目录删除 .bak/.old/备份文件；备份不随固件发布" },
     { "IFA-WEB-002", "cgi-bin 脚本改 755；上传目录禁止执行权限" },
     { "IFA-CRACK-001", "口令已被字典破解：立即更换为 16 位随机口令并全设备轮换" },
+    { "IFA-COMP-001", "升级到该组件最新版；无法升级则在防火墙侧禁用对应服务并关注厂商补丁" },
 };
 
 const char *remediation_for(const char *rule_id)

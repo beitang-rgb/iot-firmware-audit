@@ -12,6 +12,7 @@
 #include "rules_perms.h"
 #include "rules_web.h"
 #include "rules_crack.h"
+#include "rules_components.h"
 #include <stdio.h>
 
 /* 以下 wrapper 把"路径拼接"这种和规则无关的样板代码收在这里，
@@ -55,6 +56,7 @@ static const RuleEntry RULES[] = {
     { "perms",         audit_sensitive_perms },
     { "web",           audit_web_exposures },
     { "crack",         rule_crack },
+    { "components",    audit_components },
 };
 #define N_RULES (int)(sizeof(RULES) / sizeof(RULES[0]))
 

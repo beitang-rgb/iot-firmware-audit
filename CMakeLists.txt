@@ -18,6 +18,7 @@ set(RULES_SOURCES
     src/rules_perms.c
     src/rules_web.c
     src/rules_crack.c
+    src/rules_components.c
 )
 
 # 主程序

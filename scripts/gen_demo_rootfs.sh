@@ -63,4 +63,9 @@ chmod 4755 "$ROOT/usr/bin/debug"
 echo "log" > "$ROOT/var/motd"
 chmod 0666 "$ROOT/var/motd"
 
+# 假 busybox，内嵌旧版本号字符串（1.19.4 <= 1.20，会命中 CVE-2011-2716）
+mkdir -p "$ROOT/bin"
+printf '\x7fELF\x02\x01\x01\x00BusyBox v1.19.4 (2024-01-01 built)\n' > "$ROOT/bin/busybox"
+chmod 0755 "$ROOT/bin/busybox"
+
 echo "demo rootfs generated at: $ROOT"
