@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install deps
-        run: sudo apt-get update && sudo apt-get install -y gcc cmake binwalk
+        run: sudo apt-get update && sudo apt-get install -y gcc cmake binwalk cppcheck
+      - name: Static analysis (cppcheck)
+        run: cppcheck --enable=warning,performance,portability --error-exitcode=1 -Iinclude src/ tests/
       - name: Configure
         run: cmake -S . -B build
       - name: Build
