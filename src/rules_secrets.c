@@ -52,10 +52,31 @@ int line_has_secret(const char *line, char *out_detail, size_t out_size)
     return 0;
 }
 
+/* 判断文件是否为二进制：读前 512 字节，NUL 字节 >= 3 个即视为二进制。
+ * 这是 file(1) 命令的经典启发式：文本文件几乎不含 NUL，二进制文件普遍含。
+ * 返回 1 = 二进制(应跳过)，0 = 文本(可扫)。 */
+static int is_binary_file(const char *path)
+{
+    FILE *fp = fopen(path, "rb");
+    if (!fp) return 0;
+    unsigned char buf[512];
+    size_t n = fread(buf, 1, sizeof(buf), fp);
+    fclose(fp);
+    if (n == 0) return 0;
+    int nul = 0;
+    for (size_t i = 0; i < n; i++) {
+        if (buf[i] == '\0') nul++;
+    }
+    return nul >= 3 ? 1 : 0;
+}
+
 /* 对单个文本文件逐行检查 */
 static int scan_secret_file(AuditReport *rep, const char *full,
                             const char *rel)
 {
+    /* 跳过二进制文件（.so/.db/.bin 等），避免误报 */
+    if (is_binary_file(full)) return 0;
+
     FILE *fp = fopen(full, "r");
     if (!fp) return 0;
 
