@@ -6,7 +6,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -g -Wno-format-truncation)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# 规则模块（新增规则在 registry.c 的 RULES[] 表里登记，并把 .c 加到这里）
 set(RULES_SOURCES
     src/rules_account.c
     src/rules_secrets.c
@@ -21,7 +20,6 @@ set(RULES_SOURCES
     src/rules_components.c
 )
 
-# 主程序
 add_executable(ifa
     src/audit.c
     src/report.c
@@ -35,7 +33,6 @@ add_executable(ifa
 )
 target_link_libraries(ifa crypt)
 
-# 测试程序
 enable_testing()
 add_executable(test_rules
     tests/test_rules.c
