@@ -68,7 +68,7 @@ int audit_listening_services(AuditReport *rep, const char *root)
         snprintf(full, sizeof(full), "%s/%s", dir, e->d_name);
         snprintf(rel, sizeof(rel), "etc/init.d/%s", e->d_name);
         struct stat st;
-        if (stat(full, &st) == 0 && S_ISREG(st.st_mode))
+        if (lstat(full, &st) == 0 && !S_ISLNK(st.st_mode) && S_ISREG(st.st_mode))
             n += scan_net_file(rep, full, rel);
     }
     closedir(d);

@@ -1,31 +1,43 @@
 /*
  * rules_components.c — 识别固件里的关键组件版本并匹配已知 CVE
+ *
+ * 对标 EMBA 的核心功能：BusyBox/OpenSSL 等组件版本过旧 → 直接关联 CVE。
+ * 实现：fread 二进制前 256KB，找 "BusyBox vX.XX.Y" 之类的版本字符串，
+ * 与硬编码的已知漏洞版本表比对。不追求全，只抓 IoT 最常被爆的几个。
  */
 #include "rules_components.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
+/* 已知 CVE 条目：版本前缀 + CVE 编号 + 说明 */
 struct CveEntry {
-    const char *component;
-    int major, minor;
+    const char *component;     /* busybox / openssl */
+    int major, minor;          /* 版本 <= major.minor 即受影响 */
     const char *cve;
     const char *desc;
-    int severity;
+    int severity;              /* 1=MEDIUM 2=HIGH */
 };
 
 static const struct CveEntry CVE_DB[] = {
+    /* BusyBox 著名漏洞 */
     { "busybox", 1, 20, "CVE-2011-2716", "HTTPd 目录遍历，可读任意文件", 2 },
     { "busybox", 1, 22, "CVE-2015-9261", "udhcpc 栈溢出", 2 },
     { "busybox", 1, 27, "CVE-2016-2147", "HTTPd 整数溢出导致 DoS", 1 },
     { "busybox", 1, 29, "CVE-2018-1000500", "udhcpc 信息泄露", 1 },
     { "busybox", 1, 30, "CVE-2021-28363", "wget 未校验证书中间人", 1 },
+    /* OpenSSL */
     { "openssl", 1, 0, "CVE-2014-0160", "Heartbleed 心跳血漏，可读取内存私钥", 2 },
     { "openssl", 1, 1, "CVE-2016-0800", "DROWN 攻击，SSLv2 降级", 1 },
     { "openssl", 1, 1, "CVE-2022-0778", "BN_mod_sqrt 空指针崩溃", 1 },
 };
 #define N_CVE (int)(sizeof(CVE_DB)/sizeof(CVE_DB[0]))
 
+/*
+ * 纯函数：从一段内存里找 BusyBox 版本号，写到 out_major/out_minor。
+ * 找到返回 1。
+ */
 int parse_busybox_version(const char *buf, long buf_len, int *out_major, int *out_minor)
 {
     const char *needle = "BusyBox v";
@@ -42,6 +54,7 @@ int parse_busybox_version(const char *buf, long buf_len, int *out_major, int *ou
     return 0;
 }
 
+/* 读一个文件前 max_read 字节到 buf */
 static long slurp(const char *path, char *buf, long buf_sz)
 {
     FILE *fp = fopen(path, "rb");
@@ -51,6 +64,7 @@ static long slurp(const char *path, char *buf, long buf_sz)
     return n;
 }
 
+/* 比对版本：组件名 + (major.minor)，命中 CVE 表则报 */
 static int check_version(AuditReport *rep, const char *component,
                          int major, int minor, const char *path)
 {
@@ -77,13 +91,16 @@ static int check_version(AuditReport *rep, const char *component,
 
 int audit_components(AuditReport *rep, const char *root)
 {
-    char buf[262144];
+    char *buf = malloc(262144);   /* 256KB 堆分配，避免与栈上 AuditReport 叠加爆栈 */
+    if (!buf) return 0;
     char path[1024];
     int n = 0;
+
+    /* BusyBox 可能在 /bin/busybox 或 /usr/bin/busybox */
     const char *candidates[] = { "bin/busybox", "usr/bin/busybox", NULL };
     for (int i = 0; candidates[i]; i++) {
         snprintf(path, sizeof(path), "%s/%s", root, candidates[i]);
-        long len = slurp(path, buf, sizeof(buf));
+        long len = slurp(path, buf, 262144);
         if (len > 0) {
             int maj, min;
             if (parse_busybox_version(buf, len, &maj, &min)) {
@@ -93,8 +110,10 @@ int audit_components(AuditReport *rep, const char *root)
             }
         }
     }
+
+    /* OpenSSL：扫 libcrypto.so 的版本字符串 */
     snprintf(path, sizeof(path), "%s/usr/lib/libcrypto.so", root);
-    long len = slurp(path, buf, sizeof(buf));
+    long len = slurp(path, buf, 262144);
     if (len > 0) {
         rep->files_scanned++;
         for (long i = 0; i + 12 < len; i++) {
@@ -107,5 +126,6 @@ int audit_components(AuditReport *rep, const char *root)
             }
         }
     }
+    free(buf);
     return n;
 }

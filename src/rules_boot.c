@@ -100,7 +100,7 @@ static int scan_boot_dir(AuditReport *rep, const char *root)
         snprintf(full, sizeof(full), "%s/%s", path, ent->d_name);
         snprintf(rel, sizeof(rel), "etc/init.d/%s", ent->d_name);
         struct stat st;
-        if (stat(full, &st) == 0 && S_ISREG(st.st_mode)) {
+        if (lstat(full, &st) == 0 && !S_ISLNK(st.st_mode) && S_ISREG(st.st_mode)) {
             n += scan_boot_file(rep, full, rel);
         }
     }
