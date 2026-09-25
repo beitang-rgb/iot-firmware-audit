@@ -14,7 +14,7 @@
 #define IFA_MAX_FINDINGS 2048   /* 单次审计最多记录的发现项数量 */
 #define IFA_PATH_LEN     512    /* 文件路径缓冲长度 */
 #define IFA_STR_LEN      512    /* 描述文本缓冲长度 */
-#define IFA_VERSION      "0.8.0" /* 版本号：JSON 报告与 CLI 共用，只改这里 */
+#define IFA_VERSION      "1.0.0" /* 版本号：JSON 报告与 CLI 共用，只改这里 */
 
 /* 发现项严重等级，数值越大越严重 */
 typedef enum {
@@ -56,4 +56,4 @@ const char *severity_str(Severity s);
 /* 统计某等级及以上的发现数量（供摘要使用） */
 int  report_count_at_least(const AuditReport *rep, Severity s);
 
-#endif /* IFA_AUDIT_H */
+#endif
