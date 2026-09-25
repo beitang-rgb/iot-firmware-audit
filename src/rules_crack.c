@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <crypt.h>
 
 /* IoT/路由器出厂最常见的弱口令小字典 */
@@ -53,6 +54,11 @@ static void chomp(char *s)
 
 int audit_crack_shadow(AuditReport *rep, const char *shadow_path)
 {
+    /* lstat 前置：防止固件里 etc/shadow -> /etc/shadow 读到宿主密码文件 */
+    struct stat lst;
+    if (lstat(shadow_path, &lst) != 0 || S_ISLNK(lst.st_mode) || !S_ISREG(lst.st_mode))
+        return 0;
+
     FILE *fp = fopen(shadow_path, "r");
     if (!fp) return 0;
 
@@ -63,7 +69,7 @@ int audit_crack_shadow(AuditReport *rep, const char *shadow_path)
         if (line[0] == '#' || line[0] == '\0') continue;
 
         /* 切出 user 和 hash 两列（保留空字段） */
-        char buf[1024];
+        char buf[2048];
         snprintf(buf, sizeof(buf), "%s", line);
         char *user = buf;
         char *hash = strchr(buf, ':');
@@ -85,7 +91,9 @@ int audit_crack_shadow(AuditReport *rep, const char *shadow_path)
             snprintf(f.file_path, sizeof(f.file_path), "etc/shadow");
             snprintf(f.description, sizeof(f.description),
                      "账号 '%s' 的口令可被字典直接破解", user);
-            snprintf(f.detail, sizeof(f.detail), "user=%s password='%s'", user, plain);
+            /* 不写明文口令进报告，避免审计报告泄露被审计设备的凭据 */
+            snprintf(f.detail, sizeof(f.detail),
+                     "user=%s: 出厂弱口令字典命中，必须立即更换", user);
             if (report_add(rep, &f) == 0) n++;
         }
     }

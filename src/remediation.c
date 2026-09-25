@@ -10,9 +10,8 @@ struct Remap {
 };
 
 static const struct Remap TABLE[] = {
-    { "IFA-ACC-001", "删除空口令账号，或在 /etc/shadow 中为其设置强随机密码并锁定" },
-    { "IFA-ACC-002", "把 MD5 哈希替换为 sha512crypt(openssl passwd -6)；禁止 DES/MD5 口令" },
-    { "IFA-ACC-003", "哈希不应明文存于 /etc/passwd；改为 x 并移到 /etc/shadow，权限 600" },
+    { "IFA-ACC-001", "删除空口令账号；把 MD5($1$) 哈希替换为 sha512crypt(openssl passwd -6)" },
+    { "IFA-ACC-002", "把 /etc/passwd 第二字段里的哈希移到 /etc/shadow，passwd 对应位置改为 'x'" },
     { "IFA-SEC-001", "删除硬编码密钥；改用编译期注入或首次启动随机生成；轮换已泄露凭证" },
     { "IFA-PERM-001", "移除非必要 SUID 程序；必须保留的用能力(capabilities)替代 SUID" },
     { "IFA-BOOT-001", "禁用 telnetd 等明文服务；用 dropbear/OpenSSH；删除 init 脚本里的反向 shell" },
@@ -24,7 +23,7 @@ static const struct Remap TABLE[] = {
     { "IFA-WEB-001", "从 web 根目录删除 .bak/.old/备份文件；备份不随固件发布" },
     { "IFA-WEB-002", "cgi-bin 脚本改 755；上传目录禁止执行权限" },
     { "IFA-CRACK-001", "口令已被字典破解：立即更换为 16 位随机口令并全设备轮换" },
-    { "IFA-COMP-001", "升级到该组件最新版；无法升级则在防火墙侧禁用对应服务并关注厂商补丁" },
+    { "IFA-COMP-001", "升级受影响组件到厂商补丁版本；参考 CVE 公告评估暴露面" },
 };
 
 const char *remediation_for(const char *rule_id)
