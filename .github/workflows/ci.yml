@@ -12,10 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install deps
-        run: sudo apt-get update && sudo apt-get install -y gcc cmake
+        run: sudo apt-get update && sudo apt-get install -y gcc cmake binwalk
       - name: Configure
         run: cmake -S . -B build
       - name: Build
         run: cmake --build build
-      - name: Test
+      - name: Unit tests
         run: cd build && ctest --output-on-failure
+      - name: Integration test (end-to-end on demo rootfs)
+        run: bash tests/test_integration.sh

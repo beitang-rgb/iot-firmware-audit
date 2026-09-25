@@ -11,7 +11,7 @@
 
 static int walk(AuditReport *rep, const char *root, const char *rel)
 {
-    char full[1024];
+    char full[2048];
     snprintf(full, sizeof(full), "%s/%s", root, rel[0] ? rel : ".");
     DIR *d = opendir(full);
     if (!d) return 0;
@@ -19,9 +19,9 @@ static int walk(AuditReport *rep, const char *root, const char *rel)
     struct dirent *e;
     while ((e = readdir(d))) {
         if (e->d_name[0] == '.') continue;
-        char child[1024];
+        char child[2048];
         snprintf(child, sizeof(child), "%s/%s", rel, e->d_name);
-        char fullpath[1024];
+        char fullpath[2048];
         snprintf(fullpath, sizeof(fullpath), "%s/%s", root, child);
         struct stat st;
         if (lstat(fullpath, &st) != 0) continue;
@@ -33,10 +33,12 @@ static int walk(AuditReport *rep, const char *root, const char *rel)
             if (st.st_mode & 0002) {  /* o+w */
                 Finding f;
                 memset(&f, 0, sizeof(f));
+                char rel_path[IFA_PATH_LEN];
+                snprintf(rel_path, sizeof(rel_path), "%s", child);
                 snprintf(f.rule_id, sizeof(f.rule_id), "IFA-FS-001");
                 f.severity = SEV_LOW;
                 snprintf(f.category, sizeof(f.category), "filesystem");
-                snprintf(f.file_path, sizeof(f.file_path), "%s", child);
+                snprintf(f.file_path, sizeof(f.file_path), "%s", rel_path);
                 snprintf(f.description, sizeof(f.description),
                          "文件对所有人可写(全局写权限)");
                 snprintf(f.detail, sizeof(f.detail), "mode=0%o", st.st_mode & 0777);

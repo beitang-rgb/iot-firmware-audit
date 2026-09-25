@@ -95,8 +95,8 @@ static int scan_boot_dir(AuditReport *rep, const char *root)
     struct dirent *ent;
     while ((ent = readdir(d)) != NULL) {
         if (ent->d_name[0] == '.') continue;
-        char full[IFA_PATH_LEN];
-        char rel[IFA_PATH_LEN];
+        char full[2048];
+        char rel[2048];
         snprintf(full, sizeof(full), "%s/%s", path, ent->d_name);
         snprintf(rel, sizeof(rel), "etc/init.d/%s", ent->d_name);
         struct stat st;

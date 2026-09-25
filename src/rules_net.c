@@ -64,7 +64,7 @@ int audit_listening_services(AuditReport *rep, const char *root)
     struct dirent *e;
     while ((e = readdir(d))) {
         if (e->d_name[0] == '.') continue;
-        char full[1024], rel[1024];
+        char full[2048], rel[2048];
         snprintf(full, sizeof(full), "%s/%s", dir, e->d_name);
         snprintf(rel, sizeof(rel), "etc/init.d/%s", e->d_name);
         struct stat st;

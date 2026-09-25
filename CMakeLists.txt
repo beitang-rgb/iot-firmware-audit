@@ -3,7 +3,7 @@ project(iot_firmware_audit C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-add_compile_options(-Wall -Wextra -g)
+add_compile_options(-Wall -Wextra -g -Wno-format-truncation)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # 主程序
