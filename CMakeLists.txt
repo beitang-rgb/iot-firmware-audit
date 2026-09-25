@@ -17,6 +17,7 @@ set(RULES_SOURCES
     src/rules_ssh.c
     src/rules_perms.c
     src/rules_web.c
+    src/rules_crack.c
 )
 
 # 主程序
@@ -24,19 +25,23 @@ add_executable(ifa
     src/audit.c
     src/report.c
     src/report_html.c
+    src/remediation.c
     ${RULES_SOURCES}
     src/registry.c
     src/extract.c
     src/scanner.c
     src/cli.c
 )
+target_link_libraries(ifa crypt)
 
 # 测试程序
 enable_testing()
 add_executable(test_rules
     tests/test_rules.c
     src/audit.c
+    src/remediation.c
     ${RULES_SOURCES}
 )
 target_include_directories(test_rules PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(test_rules crypt)
 add_test(NAME rules_test COMMAND test_rules)

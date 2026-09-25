@@ -11,6 +11,7 @@
 #include "rules_ssh.h"
 #include "rules_perms.h"
 #include "rules_web.h"
+#include "rules_crack.h"
 #include <stdio.h>
 
 /* 以下 wrapper 把"路径拼接"这种和规则无关的样板代码收在这里，
@@ -33,6 +34,13 @@ static int rule_secrets(AuditReport *rep, const char *root)
     return audit_secrets_in_dir(rep, p);
 }
 
+static int rule_crack(AuditReport *rep, const char *root)
+{
+    char p[1024];
+    snprintf(p, sizeof(p), "%s/etc/shadow", root);
+    return audit_crack_shadow(rep, p);
+}
+
 /* suid/boot/net/worldwritable/ssh/perms/web 本身就是 (rep, root) 签名，直接登记 */
 
 /* 规则表：新增规则就在这里加一行 */
@@ -46,6 +54,7 @@ static const RuleEntry RULES[] = {
     { "ssh",           audit_ssh_config },
     { "perms",         audit_sensitive_perms },
     { "web",           audit_web_exposures },
+    { "crack",         rule_crack },
 };
 #define N_RULES (int)(sizeof(RULES) / sizeof(RULES[0]))
 

@@ -2,6 +2,7 @@
  * report.c — 把 AuditReport 渲染为人类可读文本或 JSON
  */
 #include "report.h"
+#include "remediation.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -48,7 +49,8 @@ static void render_text(const AuditReport *rep, FILE *out)
         if (f->line > 0) fprintf(out, ":%ld", f->line);
         fprintf(out, "\n");
         fprintf(out, "    描述 : %s\n", f->description);
-        fprintf(out, "    证据 : %s\n\n", f->detail);
+        fprintf(out, "    证据 : %s\n", f->detail);
+        fprintf(out, "    修复 : %s\n\n", remediation_for(f->rule_id));
     }
 }
 
@@ -78,7 +80,8 @@ static void render_json(const AuditReport *rep, FILE *out)
         fprintf(out, "      \"file\": \"");       json_esc(f->file_path, out);   fprintf(out, "\",\n");
         fprintf(out, "      \"line\": %ld,\n", f->line);
         fprintf(out, "      \"description\": \""); json_esc(f->description, out); fprintf(out, "\",\n");
-        fprintf(out, "      \"detail\": \"");     json_esc(f->detail, out);      fprintf(out, "\"\n");
+        fprintf(out, "      \"detail\": \"");     json_esc(f->detail, out);      fprintf(out, "\",\n");
+        fprintf(out, "      \"remediation\": \""); json_esc(remediation_for(f->rule_id), out); fprintf(out, "\"\n");
         fprintf(out, "    }%s\n", (i + 1 < rep->count) ? "," : "");
     }
     fprintf(out, "  ]\n");

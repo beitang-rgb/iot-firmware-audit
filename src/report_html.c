@@ -2,6 +2,7 @@
  * report_html.c — 把 AuditReport 渲染成独立 HTML
  */
 #include "report_html.h"
+#include "remediation.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -64,7 +65,7 @@ int report_write_html(const AuditReport *rep, const char *out_path)
     if (rep->count == 0) {
         fputs("<p style='color:#27ae60;font-weight:600'>未发现已知规则命中的问题。</p>", fp);
     } else {
-        fputs("<table><tr><th>严重度</th><th>规则</th><th>位置</th><th>说明</th><th>证据</th></tr>", fp);
+        fputs("<table><tr><th>严重度</th><th>规则</th><th>位置</th><th>说明</th><th>证据</th><th>修复建议</th></tr>", fp);
         for (int i = 0; i < rep->count; i++) {
             const Finding *f = &rep->items[i];
             fprintf(fp, "<tr><td><span class=\"sev\" style=\"background:%s\">%s</span></td>",
@@ -75,7 +76,10 @@ int report_write_html(const AuditReport *rep, const char *out_path)
             if (f->line > 0) fprintf(fp, ":%ld", f->line);
             fputs("</td>", fp);
             fputs("<td>", fp); html_esc(f->description, fp); fputs("</td>", fp);
-            fputs("<td>", fp); html_esc(f->detail, fp); fputs("</td></tr>", fp);
+            fputs("<td>", fp); html_esc(f->detail, fp); fputs("</td>", fp);
+            fputs("<td style=\"font-size:13px;color:#2c3e50\">", fp);
+            html_esc(remediation_for(f->rule_id), fp);
+            fputs("</td></tr>", fp);
         }
         fputs("</table>", fp);
     }

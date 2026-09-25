@@ -13,10 +13,11 @@ root:x:0:0:root:/root:/bin/sh
 admin:$1$salt$hash:0:0:admin:/home/admin:/bin/sh
 EOF
 
-# /etc/shadow: admin 是空口令(第二字段为空) + user 用 MD5 弱哈希
-cat > "$ROOT/etc/shadow" <<'EOF'
+# /etc/shadow: admin 空口令 + support 用真实 admin 口令哈希(会被字典破解)
+ADMIN_HASH="$(openssl passwd -1 -salt s4ltV4lue admin)"
+cat > "$ROOT/etc/shadow" <<EOF
 admin::18000:0:99999:7:::
-user:$1$salt$hash:18000:0:99999:7:::
+support:$ADMIN_HASH:18000:0:99999:7:::
 EOF
 
 # /etc/config: 硬编码 Wi-Fi 密码与 PSK
