@@ -7,15 +7,18 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define IFA_VERSION "0.3.0"
+
 static void usage(const char *prog)
 {
-    printf("iot-firmware-audit (ifa) v0.2 - IoT firmware rootfs security auditor\n\n");
+    printf("iot-firmware-audit (ifa) v%s - IoT firmware rootfs security auditor\n\n", IFA_VERSION);
     printf("Usage: %s <rootfs_dir> [options]\n\n", prog);
     printf("  rootfs_dir     Extracted firmware root directory (e.g. squashfs-root/)\n");
     printf("  --extract BIN  Run binwalk on a raw .bin firmware, then audit\n");
     printf("  --json FILE    Write JSON report to FILE\n");
     printf("  --html FILE    Write standalone HTML report to FILE\n");
     printf("  --text         Human-readable report to stdout (default)\n");
+    printf("  -v, --version  Print version and exit\n");
     printf("  -h, --help     Show this help\n");
 }
 
@@ -29,6 +32,9 @@ int main(int argc, char **argv)
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             usage(argv[0]);
+            return 0;
+        } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
+            printf("ifa v%s\n", IFA_VERSION);
             return 0;
         } else if (strcmp(argv[i], "--json") == 0) {
             opts.format = "json";
@@ -51,7 +57,7 @@ int main(int argc, char **argv)
     /* --extract: 先解包，再把解出来的 rootfs 路径作为 root_dir */
     if (extract_bin) {
         char rootfs[1024];
-        printf("=== iot-firmware-audit v0.2 (extract mode) ===\n");
+        printf("=== iot-firmware-audit v%s (extract mode) ===\n", IFA_VERSION);
         printf("firmware: %s\n\n", extract_bin);
         if (extract_firmware(extract_bin, rootfs, sizeof(rootfs)) != 0) {
             fprintf(stderr, "extract failed\n");
@@ -67,7 +73,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    printf("=== iot-firmware-audit v0.2 ===\n");
+    printf("=== iot-firmware-audit v%s ===\n", IFA_VERSION);
     printf("rootfs: %s\n\n", opts.root_dir);
 
     int rc = scanner_run(&opts);

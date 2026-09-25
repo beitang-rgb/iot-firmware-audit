@@ -8,6 +8,8 @@
 #include "rules_boot.h"
 #include "rules_net.h"
 #include "rules_worldwritable.h"
+#include "rules_ssh.h"
+#include "rules_perms.h"
 #include "report.h"
 #include "report_html.h"
 #include <stdio.h>
@@ -52,7 +54,11 @@ int scanner_run(const CliOptions *opts)
     audit_listening_services(&rep, opts->root_dir);
     audit_worldwritable(&rep, opts->root_dir);
 
-    /* 6) 文本/JSON 输出 */
+    /* 6) v0.3: SSH 弱配置 + 敏感文件权限 */
+    audit_ssh_config(&rep, opts->root_dir);
+    audit_sensitive_perms(&rep, opts->root_dir);
+
+    /* 7) 文本/JSON 输出 */
     if (opts->output_file) {
         FILE *fp = fopen(opts->output_file, "w");
         if (fp) {
@@ -67,7 +73,7 @@ int scanner_run(const CliOptions *opts)
         report_render(&rep, opts->format, stdout);
     }
 
-    /* 7) v0.2: HTML 报告 */
+    /* 8) v0.2: HTML 报告 */
     if (opts->output_html) {
         if (report_write_html(&rep, opts->output_html) == 0) {
             fprintf(stderr, "HTML 报告已写入: %s\n", opts->output_html);

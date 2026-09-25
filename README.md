@@ -17,8 +17,11 @@
 | IFA-ACC-002 | account | `/etc/passwd` 错误存放口令哈希 | MEDIUM |
 | IFA-SEC-001 | secrets | `/etc` 下递归扫描硬编码 password/token/私钥/PSK | MEDIUM |
 | IFA-PERM-001 | suid | 整树查找 SUID/SGID 提权文件（root 属主高危） | HIGH |
+| IFA-PERM-002 | filesystem | `/etc/shadow` 权限过宽（应为 0600/0640） | HIGH |
+| IFA-PERM-003 | filesystem | `/etc/passwd` 全局可写 | MEDIUM |
 | IFA-BOOT-001 | boot | init.d/rcS/rc.local 中 telnetd、netcat 监听、反向 shell 等后门特征 | HIGH/MEDIUM |
 | IFA-NET-001 | network | 启动脚本暴露无认证对外服务（telnetd/ftpd/nc -l） | MEDIUM |
+| IFA-SSH-001 | ssh | sshd_config 弱配置（PermitRootLogin/空密码/明文密码/Protocol 1） | MEDIUM |
 | IFA-FS-001 | filesystem | 对所有人可写的文件（o+w） | LOW |
 
 ## 构建
@@ -32,7 +35,15 @@ make
 # 产物: ifa (主程序), test_rules (测试)
 ```
 
-无 CMake 时也可直接 gcc：
+无 CMake 时也可用自带的 Makefile 一键构建：
+
+```bash
+make            # 编译 ifa 和 test_rules
+make test       # 跑全部单元测试 + 集成测试
+make clean
+```
+
+或直接 gcc：
 
 ```bash
 gcc -Wall -Wextra -g -Iinclude src/*.c -o ifa
@@ -53,16 +64,22 @@ gcc -Wall -Wextra -g -Iinclude src/*.c -o ifa
 # 直接喂原始固件 .bin，自动调 binwalk 解包后再审计
 ./ifa --extract firmware.bin --html report.html
 
+# 版本
+./ifa --version
+
 # 帮助
 ./ifa -h
 ```
 
-## 跑测试
+## 演示与测试
 
 ```bash
-cd build && ctest --output-on-failure
-# 或直接运行
-./test_rules
+# 生成一个"故意有漏洞"的演示 rootfs 并审计它
+bash scripts/gen_demo_rootfs.sh
+./ifa examples/demo_rootfs --html demo.html
+
+# 跑全部测试（单元 25 断言 + 端到端集成）
+make test
 ```
 
 ## 目录结构
@@ -82,9 +99,19 @@ cd build && ctest --output-on-failure
 │   ├── extract.c       # binwalk 解包
 │   ├── scanner.c       # 扫描编排
 │   ├── cli.c           # 命令行入口
-│   └── rules_*.c       # 七条规则实现
-└── tests/test_rules.c  # 纯函数单元测试（零外部依赖）
+│   └── rules_*.c       # 九条规则实现
+├── tests/
+│   ├── test_rules.c    # 纯函数单元测试（零外部依赖）
+│   └── test_integration.sh  # 端到端集成测试
+├── examples/demo_rootfs     # 演示用问题固件（可重建）
+├── scripts/gen_demo_rootfs.sh
+├── Makefile / CMakeLists.txt
+└── .github/workflows/ci.yml # GitHub Actions CI
 ```
+
+## 贡献
+
+想加规则、修 bug、改进报告？请看 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## ⚠️ 合规与使用红线
 

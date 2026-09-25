@@ -6,9 +6,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "=== building ifa ==="
-gcc -Wall -Wextra -g -Iinclude src/audit.c src/report.c src/report_html.c \
+gcc -Wall -Wextra -g -Wno-format-truncation -Iinclude src/audit.c src/report.c src/report_html.c \
     src/rules_account.c src/rules_secrets.c src/rules_suid.c src/rules_boot.c \
-    src/rules_net.c src/rules_worldwritable.c src/extract.c src/scanner.c src/cli.c \
+    src/rules_net.c src/rules_worldwritable.c src/rules_ssh.c src/rules_perms.c \
+    src/extract.c src/scanner.c src/cli.c \
     -o ifa
 
 echo "=== running audit against demo_rootfs ==="
@@ -26,5 +27,7 @@ grep -q 'IFA-ACC-002' /tmp/ifa_integration.json || { echo "FAIL: IFA-ACC-002 mis
 grep -q 'IFA-SEC-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-SEC-001 missing"; exit 1; }
 # telnetd 对外服务
 grep -q 'IFA-NET-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-NET-001 missing"; exit 1; }
+# SSH 弱配置
+grep -q 'IFA-SSH-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-SSH-001 missing"; exit 1; }
 
 echo "ALL INTEGRATION TESTS PASSED"

@@ -6,6 +6,7 @@
 #include "rules_secrets.h"
 #include "rules_suid.h"
 #include "rules_boot.h"
+#include "rules_ssh.h"
 #include "audit.h"
 #include <assert.h>
 #include <stdio.h>
@@ -54,11 +55,23 @@ static void test_boot(void) {
     CHECK(line_is_suspicious_boot("echo starting up", detail, sizeof(detail)) == 0);
 }
 
+static void test_ssh(void) {
+    Finding f;
+    CHECK(ssh_config_line_weak("PermitRootLogin yes", &f) == 1);
+    CHECK(f.severity == SEV_MEDIUM);
+    CHECK(ssh_config_line_weak("PermitEmptyPasswords yes", &f) == 1);
+    CHECK(ssh_config_line_weak("PasswordAuthentication yes", &f) == 1);
+    CHECK(ssh_config_line_weak("PermitRootLogin no", &f) == 0);
+    CHECK(ssh_config_line_weak("# PermitRootLogin yes", &f) == 0);
+    CHECK(ssh_config_line_weak("", &f) == 0);
+}
+
 int main(void) {
     test_account();
     test_secrets();
     test_suid();
     test_boot();
+    test_ssh();
     printf("ALL %d TESTS PASSED\n", tests_run);
     return 0;
 }

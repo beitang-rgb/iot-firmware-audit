@@ -19,5 +19,7 @@ jobs:
         run: cmake --build build
       - name: Unit tests
         run: cd build && ctest --output-on-failure
+      - name: Regenerate demo rootfs (deterministic perms)
+        run: bash scripts/gen_demo_rootfs.sh
       - name: Integration test (end-to-end on demo rootfs)
         run: bash tests/test_integration.sh
