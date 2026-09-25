@@ -1,0 +1,9 @@
+build/
+*.o
+*.a
+ifa
+test_rules
+.vscode/
+.idea/
+*.swp
+.DS_Store
