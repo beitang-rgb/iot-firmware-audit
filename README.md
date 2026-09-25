@@ -1,19 +1,25 @@
 # iot-firmware-audit (ifa)
 
+[![CI](https://github.com/beitang-rgb/iot-firmware-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/beitang-rgb/iot-firmware-audit/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 轻量级 IoT 固件根文件系统安全审计命令行工具。
-输入一个解包后的固件 rootfs（如 `squashfs-root/`），自动扫描常见安全问题并输出 text / JSON 报告。
+输入一个解包后的固件 rootfs（如 `squashfs-root/`），自动扫描常见安全问题并输出 text / JSON / HTML 报告。
 
 > 设计目标：让物联网/嵌入式方向的学生在不依赖重型企业级平台的前提下，
 > 用 C 完成一个真实可用的安全工具——同时作为学习 C、Linux、目录遍历、字符串处理的实战项目。
 
 ## 支持的规则
 
-| 规则编号 | 类别 | 检测内容 |
-|---|---|---|
-| IFA-ACC-001/002 | account | `/etc/shadow` 弱口令哈希（MD5）、明文口令；`/etc/passwd` 错误存放哈希 |
-| IFA-SEC-001 | secrets | `/etc` 下递归扫描硬编码 password/token/私钥/PSK |
-| IFA-PERM-001 | suid | 整树查找 SUID/SGID 提权文件（root 属主高危） |
-| IFA-BOOT-001 | boot | init.d/rcS/rc.local 中 telnetd、netcat 监听、反向 shell 等后门特征 |
+| 规则编号 | 类别 | 检测内容 | 严重度 |
+|---|---|---|---|
+| IFA-ACC-001 | account | `/etc/shadow` 空口令、弱哈希（MD5 $1$）、疑似明文 | CRITICAL~MEDIUM |
+| IFA-ACC-002 | account | `/etc/passwd` 错误存放口令哈希 | MEDIUM |
+| IFA-SEC-001 | secrets | `/etc` 下递归扫描硬编码 password/token/私钥/PSK | MEDIUM |
+| IFA-PERM-001 | suid | 整树查找 SUID/SGID 提权文件（root 属主高危） | HIGH |
+| IFA-BOOT-001 | boot | init.d/rcS/rc.local 中 telnetd、netcat 监听、反向 shell 等后门特征 | HIGH/MEDIUM |
+| IFA-NET-001 | network | 启动脚本暴露无认证对外服务（telnetd/ftpd/nc -l） | MEDIUM |
+| IFA-FS-001 | filesystem | 对所有人可写的文件（o+w） | LOW |
 
 ## 构建
 
@@ -41,6 +47,12 @@ gcc -Wall -Wextra -g -Iinclude src/*.c -o ifa
 # 输出 JSON 报告到文件
 ./ifa /path/to/squashfs-root/ --json report.json
 
+# 输出独立 HTML 报告（带统计卡片，浏览器打开）
+./ifa /path/to/squashfs-root/ --html report.html
+
+# 直接喂原始固件 .bin，自动调 binwalk 解包后再审计
+./ifa --extract firmware.bin --html report.html
+
 # 帮助
 ./ifa -h
 ```
@@ -60,13 +72,17 @@ cd build && ctest --output-on-failure
 │   ├── audit.h         # Finding / AuditReport 数据结构
 │   ├── scanner.h       # 编排器 + CliOptions
 │   ├── report.h        # report_render(text/json)
-│   └── rules_*.h       # 四条规则的纯函数接口
+│   ├── report_html.h   # HTML 报告
+│   ├── extract.h       # binwalk 自动解包
+│   └── rules_*.h       # 各规则模块纯函数接口
 ├── src/
 │   ├── audit.c         # 报告数据结构操作
 │   ├── report.c        # text/json 渲染
+│   ├── report_html.c   # HTML 渲染
+│   ├── extract.c       # binwalk 解包
 │   ├── scanner.c       # 扫描编排
 │   ├── cli.c           # 命令行入口
-│   └── rules_*.c       # 四条规则实现
+│   └── rules_*.c       # 七条规则实现
 └── tests/test_rules.c  # 纯函数单元测试（零外部依赖）
 ```
 
