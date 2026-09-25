@@ -15,8 +15,10 @@ int mode_is_suid_sgid(mode_t m)
     return (m & S_ISUID) || (m & S_ISGID);
 }
 
-static int walk_suid(AuditReport *rep, const char *dir, const char *rel_base)
+#define MAX_WALK_DEPTH 32
+static int walk_suid(AuditReport *rep, const char *dir, const char *rel_base, int depth)
 {
+    if (depth > MAX_WALK_DEPTH) return 0;
     DIR *d = opendir(dir);
     if (!d) return 0;
 
@@ -35,7 +37,7 @@ static int walk_suid(AuditReport *rep, const char *dir, const char *rel_base)
         if (lstat(full, &st) != 0) continue;   /* 用 lstat 不跟随软链 */
 
         if (S_ISDIR(st.st_mode)) {
-            n += walk_suid(rep, full, rel);
+            n += walk_suid(rep, full, rel, depth + 1);
         } else if (S_ISREG(st.st_mode) && mode_is_suid_sgid(st.st_mode)) {
             Finding f;
             memset(&f, 0, sizeof(f));
@@ -59,5 +61,5 @@ static int walk_suid(AuditReport *rep, const char *dir, const char *rel_base)
 
 int audit_suid_tree(AuditReport *rep, const char *root)
 {
-    return walk_suid(rep, root, "");
+    return walk_suid(rep, root, "", 0);
 }

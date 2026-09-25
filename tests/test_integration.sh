@@ -13,8 +13,12 @@ gcc -Wall -Wextra -g -Wno-format-truncation -Iinclude src/audit.c src/report.c s
     src/registry.c src/extract.c src/scanner.c src/cli.c \
     -o ifa
 
+# 在真 Linux 文件系统上生成 demo rootfs（/mnt/d 等 drvfs 不支持 SUID/chmod 位）
+WORKDIR="$(mktemp -d)"
+bash scripts/gen_demo_rootfs.sh "$WORKDIR/rootfs"
+
 echo "=== running audit against demo_rootfs ==="
-./ifa examples/demo_rootfs --json /tmp/ifa_integration.json >/dev/null
+./ifa "$WORKDIR/rootfs" --json /tmp/ifa_integration.json >/dev/null
 
 echo "=== asserting findings ==="
 # 空口令必须报 CRITICAL
@@ -34,5 +38,13 @@ grep -q 'IFA-SSH-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-SSH-001 mis
 grep -q 'IFA-WEB-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-WEB-001 missing"; exit 1; }
 # cgi-bin 全局可写
 grep -q 'IFA-WEB-002' /tmp/ifa_integration.json || { echo "FAIL: IFA-WEB-002 missing"; exit 1; }
+# SUID root 文件
+grep -q 'IFA-PERM-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-PERM-001 missing"; exit 1; }
+# shadow 权限过宽
+grep -q 'IFA-PERM-002' /tmp/ifa_integration.json || { echo "FAIL: IFA-PERM-002 missing"; exit 1; }
+# 全局可写文件
+grep -q 'IFA-FS-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-FS-001 missing"; exit 1; }
+# 可疑启动项
+grep -q 'IFA-BOOT-001' /tmp/ifa_integration.json || { echo "FAIL: IFA-BOOT-001 missing"; exit 1; }
 
 echo "ALL INTEGRATION TESTS PASSED"

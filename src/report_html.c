@@ -49,8 +49,10 @@ int report_write_html(const AuditReport *rep, const char *out_path)
           "</style></head><body>", fp);
 
     fputs("<h1>IoT 固件 rootfs 安全审计报告</h1>", fp);
-    fprintf(fp, "<p>rootfs: <code>%s</code> · 扫描文件 %d · 发现 %d 项</p>",
-            rep->root_dir, rep->files_scanned, rep->count);
+    fputs("<p>rootfs: <code>", fp);
+    html_esc(rep->root_dir, fp);
+    fprintf(fp, "</code> · 扫描文件 %d · 发现 %d 项</p>",
+            rep->files_scanned, rep->count);
 
     fputs("<div class=\"cards\">", fp);
     fprintf(fp, "<div class=\"card\" style=\"background:#c0392b\">CRITICAL %d</div>", crit);
@@ -68,7 +70,8 @@ int report_write_html(const AuditReport *rep, const char *out_path)
             fprintf(fp, "<tr><td><span class=\"sev\" style=\"background:%s\">%s</span></td>",
                     sev_color(f->severity), severity_str(f->severity));
             fprintf(fp, "<td>%s</td>", f->rule_id);
-            fprintf(fp, "<td>%s", f->file_path);
+            fputs("<td>", fp);
+            html_esc(f->file_path, fp);
             if (f->line > 0) fprintf(fp, ":%ld", f->line);
             fputs("</td>", fp);
             fputs("<td>", fp); html_esc(f->description, fp); fputs("</td>", fp);

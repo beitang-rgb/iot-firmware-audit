@@ -84,9 +84,12 @@ static int scan_secret_file(AuditReport *rep, const char *full,
     return n;
 }
 
-/* 递归遍历目录，对每个普通文件调用 scan_secret_file */
-static int walk_secrets(AuditReport *rep, const char *dir, const char *rel_base)
+/* 递归遍历目录，对每个普通文件调用 scan_secret_file
+ * depth 防止恶意固件用几千层硬目录把栈打爆 */
+#define MAX_WALK_DEPTH 32
+static int walk_secrets(AuditReport *rep, const char *dir, const char *rel_base, int depth)
 {
+    if (depth > MAX_WALK_DEPTH) return 0;
     DIR *d = opendir(dir);
     if (!d) return 0;
 
@@ -109,7 +112,7 @@ static int walk_secrets(AuditReport *rep, const char *dir, const char *rel_base)
         if (S_ISLNK(st.st_mode)) continue;   /* 符号链接一律不进 */
 
         if (S_ISDIR(st.st_mode)) {
-            n += walk_secrets(rep, full, rel);
+            n += walk_secrets(rep, full, rel, depth + 1);
         } else if (S_ISREG(st.st_mode)) {
             rep->files_scanned++;
             n += scan_secret_file(rep, full, rel);
@@ -121,5 +124,5 @@ static int walk_secrets(AuditReport *rep, const char *dir, const char *rel_base)
 
 int audit_secrets_in_dir(AuditReport *rep, const char *etc_dir)
 {
-    return walk_secrets(rep, etc_dir, "etc");
+    return walk_secrets(rep, etc_dir, "etc", 0);
 }

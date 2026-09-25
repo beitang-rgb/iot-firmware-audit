@@ -5,7 +5,7 @@ set -euo pipefail
 
 ROOT="${1:-examples/demo_rootfs}"
 rm -rf "$ROOT"
-mkdir -p "$ROOT/etc/init.d" "$ROOT/etc/ssh" "$ROOT/www/cgi-bin"
+mkdir -p "$ROOT/etc/init.d" "$ROOT/etc/ssh" "$ROOT/www/cgi-bin" "$ROOT/usr/bin" "$ROOT/var"
 
 # /etc/passwd: admin 把口令哈希直接放在第二字段(应为 x)
 cat > "$ROOT/etc/passwd" <<'EOF'
@@ -52,5 +52,14 @@ chmod 0644 "$ROOT/etc/shadow"
 chmod 0644 "$ROOT/etc/ssh/sshd_config"
 chmod 0755 "$ROOT/etc/init.d/S50telnet"
 chmod 0777 "$ROOT/www/cgi-bin/exec.cgi"
+
+# SUID root 调试程序（故意留的提权后门）
+mkdir -p "$ROOT/usr/bin"
+echo '#!/bin/sh' > "$ROOT/usr/bin/debug"
+chmod 4755 "$ROOT/usr/bin/debug"
+
+# 一个全局可写的普通文件
+echo "log" > "$ROOT/var/motd"
+chmod 0666 "$ROOT/var/motd"
 
 echo "demo rootfs generated at: $ROOT"

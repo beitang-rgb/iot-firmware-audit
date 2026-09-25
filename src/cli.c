@@ -43,14 +43,27 @@ int main(int argc, char **argv)
             registry_list();
             return 0;
         } else if (strcmp(argv[i], "--json") == 0) {
+            if (i + 1 >= argc || argv[i+1][0] == '-') {
+                fprintf(stderr, "error: --json 需要一个输出文件路径\n");
+                return 1;
+            }
             opts.format = "json";
-            if (i + 1 < argc) opts.output_file = argv[++i];
+            opts.output_file = argv[++i];
         } else if (strcmp(argv[i], "--html") == 0) {
-            if (i + 1 < argc) opts.output_html = argv[++i];
+            if (i + 1 >= argc || argv[i+1][0] == '-') {
+                fprintf(stderr, "error: --html 需要一个输出文件路径\n");
+                return 1;
+            }
+            opts.output_html = argv[++i];
         } else if (strcmp(argv[i], "--extract") == 0) {
-            if (i + 1 < argc) extract_bin = argv[++i];
+            if (i + 1 >= argc || argv[i+1][0] == '-') {
+                fprintf(stderr, "error: --extract 需要一个固件文件路径\n");
+                return 1;
+            }
+            extract_bin = argv[++i];
         } else if (strcmp(argv[i], "--text") == 0) {
             opts.format = "text";
+            opts.output_file = NULL;   /* --text 强制只写 stdout，不写文件 */
         } else if (argv[i][0] == '-') {
             fprintf(stderr, "error: unknown option '%s'\n\n", argv[i]);
             usage(argv[0]);
