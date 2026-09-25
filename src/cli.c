@@ -29,6 +29,8 @@ int main(int argc, char **argv)
     memset(&opts, 0, sizeof(opts));
     opts.format = "text";
     const char *extract_bin = NULL;
+    char rootfs[1024];   /* 必须在 main 顶部声明，否则块结束后变成悬垂指针 */
+    rootfs[0] = '\0';
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -60,7 +62,6 @@ int main(int argc, char **argv)
 
     /* --extract: 先解包，再把解出来的 rootfs 路径作为 root_dir */
     if (extract_bin) {
-        char rootfs[1024];
         printf("=== iot-firmware-audit v%s (extract mode) ===\n", IFA_VERSION);
         printf("firmware: %s\n\n", extract_bin);
         if (extract_firmware(extract_bin, rootfs, sizeof(rootfs)) != 0) {
