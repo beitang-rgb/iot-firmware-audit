@@ -2,7 +2,7 @@
 CC      ?= gcc
 CFLAGS  ?= -Wall -Wextra -g -Wno-format-truncation -Iinclude
 LDLIBS  := -lcrypt
-SRCS    := src/audit.c src/report.c src/report_html.c src/remediation.c \
+SRCS    := src/audit.c src/report.c src/report_html.c src/report_sarif.c src/remediation.c \
            src/rules_account.c src/rules_secrets.c src/rules_suid.c src/rules_boot.c \
            src/rules_net.c src/rules_worldwritable.c src/rules_ssh.c src/rules_perms.c \
            src/rules_web.c src/rules_crack.c src/rules_components.c \
